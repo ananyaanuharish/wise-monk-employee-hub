@@ -1,0 +1,182 @@
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+export interface Employee {
+  id: string;
+  full_name: string;
+  email: string;
+  department: string;
+  role: string;
+  phone?: string;
+  profile_picture?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const useEmployees = () => {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchEmployees = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setEmployees(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error fetching employees",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addEmployee = async (employeeData: Omit<Employee, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .insert([employeeData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      toast({
+        title: "Employee added successfully",
+        description: `${employeeData.full_name} has been added to the directory.`,
+      });
+      
+      return { data, error: null };
+    } catch (error: any) {
+      toast({
+        title: "Error adding employee",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { data: null, error };
+    }
+  };
+
+  const updateEmployee = async (id: string, employeeData: Partial<Employee>) => {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .update(employeeData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      toast({
+        title: "Employee updated successfully",
+        description: `Employee information has been updated.`,
+      });
+      
+      return { data, error: null };
+    } catch (error: any) {
+      toast({
+        title: "Error updating employee",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { data: null, error };
+    }
+  };
+
+  const deleteEmployee = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Employee deleted",
+        description: "Employee has been removed from the directory.",
+      });
+      
+      return { error: null };
+    } catch (error: any) {
+      toast({
+        title: "Error deleting employee",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { error };
+    }
+  };
+
+  const uploadProfilePicture = async (file: File, employeeId: string) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${employeeId}.${fileExt}`;
+      const filePath = `profile-pictures/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('employee-photos')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('employee-photos')
+        .getPublicUrl(filePath);
+
+      return { url: data.publicUrl, error: null };
+    } catch (error: any) {
+      toast({
+        title: "Error uploading image",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { url: null, error };
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('employees-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'employees'
+        },
+        (payload) => {
+          console.log('Employee change received:', payload);
+          fetchEmployees(); // Refetch all employees on any change
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  return {
+    employees,
+    loading,
+    addEmployee,
+    updateEmployee,
+    deleteEmployee,
+    uploadProfilePicture,
+    refetch: fetchEmployees
+  };
+};

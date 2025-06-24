@@ -1,9 +1,6 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { Building2, Users, Search, Shield } from "lucide-react";
 
@@ -24,7 +21,7 @@ const Index = () => {
               <p className="text-xs text-muted-foreground">HR Portal</p>
             </div>
           </div>
-          <Button onClick={() => navigate('/login')} className="bg-black hover:bg-gray-800 text-white">
+          <Button onClick={() => navigate('/auth')} className="bg-black hover:bg-gray-800 text-white">
             Get Started
           </Button>
         </div>
@@ -96,11 +93,11 @@ const Index = () => {
               Access your employee directory and start managing your team more efficiently.
             </p>
             <Button 
-              onClick={() => navigate('/login')} 
+              onClick={() => navigate('/auth')} 
               size="lg"
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8"
             >
-              Access Portal
+              Start Recording Now
             </Button>
           </div>
         </div>

@@ -1,64 +1,16 @@
 
 import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Users } from "lucide-react";
+import { Search, Filter, Users, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import EmployeeCard from "@/components/EmployeeCard";
-import { useToast } from "@/hooks/use-toast";
-
-// Mock data - replace with Supabase data
-const mockEmployees = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah.johnson@wisemonk.com",
-    department: "Engineering",
-    role: "Senior Developer",
-  },
-  {
-    id: "2",
-    name: "Michael Chen",
-    email: "michael.chen@wisemonk.com",
-    department: "Design",
-    role: "UI/UX Designer",
-  },
-  {
-    id: "3",
-    name: "Emily Davis",
-    email: "emily.davis@wisemonk.com",
-    department: "Marketing",
-    role: "Marketing Manager",
-  },
-  {
-    id: "4",
-    name: "David Wilson",
-    email: "david.wilson@wisemonk.com",
-    department: "Engineering",
-    role: "DevOps Engineer",
-  },
-  {
-    id: "5",
-    name: "Lisa Anderson",
-    email: "lisa.anderson@wisemonk.com",
-    department: "HR",
-    role: "HR Specialist",
-  },
-  {
-    id: "6",
-    name: "James Rodriguez",
-    email: "james.rodriguez@wisemonk.com",
-    department: "Sales",
-    role: "Sales Representative",
-  },
-];
+import { useEmployees } from "@/hooks/useEmployees";
 
 const Dashboard = () => {
-  const [employees, setEmployees] = useState(mockEmployees);
+  const { employees, loading, deleteEmployee } = useEmployees();
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
-  const { toast } = useToast();
 
   const departments = useMemo(() => {
     const depts = [...new Set(employees.map(emp => emp.department))];
@@ -67,10 +19,11 @@ const Dashboard = () => {
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(employee => {
-      const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           employee.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           employee.role.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = 
+        employee.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.role.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesDepartment = departmentFilter === "all" || employee.department === departmentFilter;
       
@@ -78,13 +31,20 @@ const Dashboard = () => {
     });
   }, [employees, searchTerm, departmentFilter]);
 
-  const handleDeleteEmployee = (id: string) => {
-    setEmployees(prev => prev.filter(emp => emp.id !== id));
-    toast({
-      title: "Employee deleted",
-      description: "Employee has been removed from the directory.",
-    });
+  const handleDeleteEmployee = async (id: string) => {
+    await deleteEmployee(id);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -191,11 +151,6 @@ const Dashboard = () => {
                 ? "Try adjusting your search or filter criteria" 
                 : "Get started by adding your first employee"}
             </p>
-            {!searchTerm && departmentFilter === "all" && (
-              <Button onClick={() => window.location.href = '/add-employee'}>
-                Add First Employee
-              </Button>
-            )}
           </div>
         )}
       </div>

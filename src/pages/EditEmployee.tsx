@@ -45,12 +45,19 @@ const EditEmployee = () => {
         const { data, error } = await supabase
           .from('employees')
           .select('*')
-          .eq('id', id)
+          .eq('id', parseInt(id))
           .single();
 
         if (error) throw error;
         if (data) {
-          setFormData(data);
+          setFormData({
+            full_name: data.full_name || "",
+            email: data.email || "",
+            department: data.department || "",
+            role: data.role || "",
+            phone: data.phone || "",
+            profile_picture: data.profile_picture || "",
+          });
         }
       } catch (error) {
         console.error('Error fetching employee:', error);

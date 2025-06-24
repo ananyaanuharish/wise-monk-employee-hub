@@ -28,7 +28,17 @@ export const useEmployees = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setEmployees(data || []);
+      
+      // Transform the data to match our Employee interface
+      const transformedData = (data || []).map(emp => ({
+        ...emp,
+        id: emp.id.toString(),
+        profile_picture: emp.profile_picture || '',
+        phone: emp.phone || '',
+        updated_at: emp.updated_at || emp.created_at
+      }));
+      
+      setEmployees(transformedData);
     } catch (error: any) {
       toast({
         title: "Error fetching employees",
@@ -71,7 +81,7 @@ export const useEmployees = () => {
       const { data, error } = await supabase
         .from('employees')
         .update(employeeData)
-        .eq('id', id)
+        .eq('id', parseInt(id))
         .select()
         .single();
 
@@ -98,7 +108,7 @@ export const useEmployees = () => {
       const { error } = await supabase
         .from('employees')
         .delete()
-        .eq('id', id);
+        .eq('id', parseInt(id));
 
       if (error) throw error;
       

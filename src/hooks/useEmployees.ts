@@ -31,10 +31,14 @@ export const useEmployees = () => {
       
       // Transform the data to match our Employee interface
       const transformedData = (data || []).map(emp => ({
-        ...emp,
         id: emp.id.toString(),
-        profile_picture: emp.profile_picture || '',
+        full_name: emp.full_name || '',
+        email: emp.email || '',
+        department: emp.department || '',
+        role: emp.role || '',
         phone: emp.phone || '',
+        profile_picture: emp.profile_picture || '',
+        created_at: emp.created_at,
         updated_at: emp.updated_at || emp.created_at
       }));
       
@@ -52,9 +56,19 @@ export const useEmployees = () => {
 
   const addEmployee = async (employeeData: Omit<Employee, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // Create data object that matches the database schema
+      const dbData = {
+        full_name: employeeData.full_name,
+        email: employeeData.email,
+        department: employeeData.department,
+        role: employeeData.role,
+        phone: employeeData.phone || null,
+        profile_picture: employeeData.profile_picture || null
+      };
+
       const { data, error } = await supabase
         .from('employees')
-        .insert([employeeData])
+        .insert([dbData])
         .select()
         .single();
 
@@ -78,9 +92,12 @@ export const useEmployees = () => {
 
   const updateEmployee = async (id: string, employeeData: Partial<Employee>) => {
     try {
+      // Create data object that matches the database schema, excluding id, created_at, updated_at
+      const { id: _, created_at, updated_at, ...dbData } = employeeData;
+      
       const { data, error } = await supabase
         .from('employees')
-        .update(employeeData)
+        .update(dbData)
         .eq('id', parseInt(id))
         .select()
         .single();

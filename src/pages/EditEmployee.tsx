@@ -5,8 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Upload } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ArrowLeft, Save, Upload, CalendarIcon } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import Navbar from "@/components/Navbar";
 import { useEmployees } from "@/hooks/useEmployees";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +24,9 @@ const EditEmployee = () => {
     role: "",
     phone: "",
     profile_picture: "",
+    joining_date: "",
   });
+  const [joiningDate, setJoiningDate] = useState<Date | undefined>(undefined);
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -57,7 +63,13 @@ const EditEmployee = () => {
             role: data.role || "",
             phone: data.phone || "",
             profile_picture: data.profile_picture || "",
+            joining_date: data.joining_date || "",
           });
+          
+          // Set the joining date for the date picker
+          if (data.joining_date) {
+            setJoiningDate(new Date(data.joining_date));
+          }
         }
       } catch (error) {
         console.error('Error fetching employee:', error);
@@ -76,7 +88,10 @@ const EditEmployee = () => {
     setIsLoading(true);
 
     try {
-      let updateData = { ...formData };
+      let updateData = { 
+        ...formData,
+        joining_date: joiningDate ? format(joiningDate, 'yyyy-MM-dd') : null
+      };
 
       // If there's a new profile picture, upload it first
       if (profilePicture) {
@@ -227,6 +242,34 @@ const EditEmployee = () => {
                     value={formData.phone || ""}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="joining_date">Joining Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !joiningDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {joiningDate ? format(joiningDate, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={joiningDate}
+                        onSelect={setJoiningDate}
+                        disabled={(date) => date > new Date()}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="flex justify-end space-x-4 pt-6 border-t">

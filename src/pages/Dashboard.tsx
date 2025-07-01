@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Filter, Users, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import EmployeeCard from "@/components/EmployeeCard";
+import EmployeeJoiningChart from "@/components/EmployeeJoiningChart";
 import { useEmployees } from "@/hooks/useEmployees";
 
 const Dashboard = () => {
@@ -122,11 +123,16 @@ const Dashboard = () => {
                 <Search className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-muted-foreground">Filtered Results</p>
+                <p className="text-sm text-muted-foregraduate">Filtered Results</p>
                 <p className="text-2xl font-bold">{filteredEmployees.length}</p>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Employee Joining Analytics Chart */}
+        <div className="mb-8">
+          <EmployeeJoiningChart />
         </div>
 
         {/* Employee Grid */}

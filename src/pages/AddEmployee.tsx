@@ -46,6 +46,7 @@ const AddEmployee = () => {
     try {
       const employeeData = {
         ...formData,
+        // Fix timezone issue: format date as YYYY-MM-DD in local timezone to avoid UTC shifts
         joining_date: joiningDate ? format(joiningDate, "yyyy-MM-dd") : ""
       };
 
@@ -213,7 +214,16 @@ const AddEmployee = () => {
                       <Calendar
                         mode="single"
                         selected={joiningDate}
-                        onSelect={setJoiningDate}
+                        onSelect={(date) => {
+                          // Fix timezone: set time to noon to avoid UTC date shifts
+                          if (date) {
+                            const fixedDate = new Date(date);
+                            fixedDate.setHours(12, 0, 0, 0);
+                            setJoiningDate(fixedDate);
+                          } else {
+                            setJoiningDate(undefined);
+                          }
+                        }}
                         initialFocus
                         className="p-3 pointer-events-auto"
                       />

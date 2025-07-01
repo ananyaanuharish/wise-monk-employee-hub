@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,9 +65,13 @@ const EditEmployee = () => {
             joining_date: data.joining_date || "",
           });
           
-          // Set the joining date for the date picker
+          // Fix timezone: parse date properly to avoid shifts
           if (data.joining_date) {
-            setJoiningDate(new Date(data.joining_date));
+            const dateString = data.joining_date;
+            // Create date at noon to avoid timezone shifts
+            const [year, month, day] = dateString.split('-').map(Number);
+            const fixedDate = new Date(year, month - 1, day, 12, 0, 0, 0);
+            setJoiningDate(fixedDate);
           }
         }
       } catch (error) {
@@ -90,6 +93,7 @@ const EditEmployee = () => {
     try {
       let updateData = { 
         ...formData,
+        // Fix timezone: format date as YYYY-MM-DD in local timezone to avoid UTC shifts
         joining_date: joiningDate ? format(joiningDate, 'yyyy-MM-dd') : null
       };
 
@@ -263,7 +267,16 @@ const EditEmployee = () => {
                       <Calendar
                         mode="single"
                         selected={joiningDate}
-                        onSelect={setJoiningDate}
+                        onSelect={(date) => {
+                          // Fix timezone: set time to noon to avoid UTC date shifts
+                          if (date) {
+                            const fixedDate = new Date(date);
+                            fixedDate.setHours(12, 0, 0, 0);
+                            setJoiningDate(fixedDate);
+                          } else {
+                            setJoiningDate(undefined);
+                          }
+                        }}
                         disabled={(date) => date > new Date()}
                         initialFocus
                         className="pointer-events-auto"

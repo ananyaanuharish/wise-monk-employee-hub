@@ -16,11 +16,13 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: number
+          joining_date: string | null
           phone: string | null
           profile_picture: string | null
           role: string | null
           updated_at: string
           user_id: string | null
+          uuid: string
         }
         Insert: {
           created_at?: string
@@ -28,11 +30,13 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: number
+          joining_date?: string | null
           phone?: string | null
           profile_picture?: string | null
           role?: string | null
           updated_at?: string
           user_id?: string | null
+          uuid?: string
         }
         Update: {
           created_at?: string
@@ -40,11 +44,13 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: number
+          joining_date?: string | null
           phone?: string | null
           profile_picture?: string | null
           role?: string | null
           updated_at?: string
           user_id?: string | null
+          uuid?: string
         }
         Relationships: []
       }

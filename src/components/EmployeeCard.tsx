@@ -2,7 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash, Mail, Phone, User } from "lucide-react";
+import { Edit, Trash, Mail, Phone, User, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Employee } from "@/hooks/useEmployees";
 
@@ -28,6 +28,16 @@ const EmployeeCard = ({ employee, onDelete }: EmployeeCardProps) => {
       return "Recently added";
     }
     return date.toLocaleDateString();
+  };
+
+  const formatJoiningDate = (dateString: string) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
   return (
@@ -60,6 +70,12 @@ const EmployeeCard = ({ employee, onDelete }: EmployeeCardProps) => {
               <p className="text-sm text-muted-foreground mb-2 flex items-center">
                 <Phone className="w-3 h-3 mr-1" />
                 {employee.phone}
+              </p>
+            )}
+            {employee.joining_date && (
+              <p className="text-sm text-muted-foreground mb-2 flex items-center">
+                <Calendar className="w-3 h-3 mr-1" />
+                Joined: {formatJoiningDate(employee.joining_date)}
               </p>
             )}
             <div className="flex flex-wrap gap-2 mb-2">

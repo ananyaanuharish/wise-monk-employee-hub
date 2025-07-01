@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +10,7 @@ export interface Employee {
   role: string;
   phone?: string;
   profile_picture?: string;
+  joining_date?: string;
   created_at: string;
   updated_at: string;
 }
@@ -38,6 +38,7 @@ export const useEmployees = () => {
         role: emp.role || '',
         phone: emp.phone || '',
         profile_picture: emp.profile_picture || '',
+        joining_date: emp.joining_date || '',
         created_at: emp.created_at,
         updated_at: emp.updated_at || emp.created_at
       }));
@@ -63,7 +64,8 @@ export const useEmployees = () => {
         department: employeeData.department,
         role: employeeData.role,
         phone: employeeData.phone || null,
-        profile_picture: employeeData.profile_picture || null
+        profile_picture: employeeData.profile_picture || null,
+        joining_date: employeeData.joining_date || null
       };
 
       const { data, error } = await supabase

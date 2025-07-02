@@ -66,13 +66,10 @@ const EditEmployee = () => {
             joining_date: data.joining_date || "",
           });
           
-          // Fix timezone: parse date properly to avoid shifts
+          // Fix: Convert stored YYYY-MM-DD string back to Date object without timezone shift
           if (data.joining_date) {
-            const dateString = data.joining_date;
-            // Create date from the stored YYYY-MM-DD string
-            const [year, month, day] = dateString.split('-').map(Number);
-            const localDate = new Date(year, month - 1, day);
-            setJoiningDate(localDate);
+            const date = new Date(data.joining_date + "T00:00:00");
+            setJoiningDate(date);
           }
         }
       } catch (error) {
@@ -94,10 +91,9 @@ const EditEmployee = () => {
     try {
       let updateData = { 
         ...formData,
-        // Fix timezone issue: format date as YYYY-MM-DD using UTC to avoid shifts
+        // Fix: Convert selected date to YYYY-MM-DD format without timezone issues
         joining_date: joiningDate ? 
-          new Date(Date.UTC(joiningDate.getFullYear(), joiningDate.getMonth(), joiningDate.getDate()))
-            .toISOString().split('T')[0] : null
+          new Date(joiningDate).toISOString().split('T')[0] : null
       };
 
       // If there's a new profile picture, upload it first
@@ -301,7 +297,7 @@ const EditEmployee = () => {
                       </>
                     )}
                   </Button>
-                  </div>
+                </div>
               </form>
             </CardContent>
           </Card>

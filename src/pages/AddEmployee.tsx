@@ -47,10 +47,9 @@ const AddEmployee = () => {
     try {
       const employeeData = {
         ...formData,
-        // Fix timezone issue: format date as YYYY-MM-DD using UTC to avoid shifts
+        // Fix: Convert selected date to YYYY-MM-DD format without timezone issues
         joining_date: joiningDate ? 
-          new Date(Date.UTC(joiningDate.getFullYear(), joiningDate.getMonth(), joiningDate.getDate()))
-            .toISOString().split('T')[0] : ""
+          new Date(joiningDate).toISOString().split('T')[0] : ""
       };
 
       // First add the employee

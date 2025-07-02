@@ -49,7 +49,7 @@ const AddEmployee = () => {
         ...formData,
         // Fix: Convert selected date to YYYY-MM-DD format without timezone issues
         joining_date: joiningDate ? 
-          new Date(joiningDate).toISOString().split('T')[0] : ""
+          `${joiningDate.getFullYear()}-${String(joiningDate.getMonth() + 1).padStart(2, '0')}-${String(joiningDate.getDate()).padStart(2, '0')}` : ""
       };
 
       // First add the employee

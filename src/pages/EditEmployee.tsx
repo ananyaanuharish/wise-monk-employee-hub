@@ -68,7 +68,8 @@ const EditEmployee = () => {
           
           // Fix: Convert stored YYYY-MM-DD string back to Date object without timezone shift
           if (data.joining_date) {
-            const date = new Date(data.joining_date + "T00:00:00");
+            const [year, month, day] = data.joining_date.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
             setJoiningDate(date);
           }
         }
@@ -93,7 +94,7 @@ const EditEmployee = () => {
         ...formData,
         // Fix: Convert selected date to YYYY-MM-DD format without timezone issues
         joining_date: joiningDate ? 
-          new Date(joiningDate).toISOString().split('T')[0] : null
+          `${joiningDate.getFullYear()}-${String(joiningDate.getMonth() + 1).padStart(2, '0')}-${String(joiningDate.getDate()).padStart(2, '0')}` : null
       };
 
       // If there's a new profile picture, upload it first

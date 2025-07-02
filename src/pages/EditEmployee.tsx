@@ -66,7 +66,7 @@ const EditEmployee = () => {
             joining_date: data.joining_date || "",
           });
           
-          // Fix: Convert stored YYYY-MM-DD string back to Date object without timezone shift
+          // Fix: Convert stored YYYY-MM-DD string back to Date object using date components to avoid timezone shift
           if (data.joining_date) {
             const [year, month, day] = data.joining_date.split('-').map(Number);
             const date = new Date(year, month - 1, day);
@@ -92,7 +92,7 @@ const EditEmployee = () => {
     try {
       let updateData = { 
         ...formData,
-        // Fix: Convert selected date to YYYY-MM-DD format without timezone issues
+        // Fix: Convert selected date to YYYY-MM-DD format using date components to avoid timezone issues
         joining_date: joiningDate ? 
           `${joiningDate.getFullYear()}-${String(joiningDate.getMonth() + 1).padStart(2, '0')}-${String(joiningDate.getDate()).padStart(2, '0')}` : null
       };

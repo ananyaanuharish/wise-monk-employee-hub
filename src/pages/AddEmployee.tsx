@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/Navbar";
 import { useEmployees } from "@/hooks/useEmployees";
+import { supabase } from "@/integrations/supabase/client";
 
 const AddEmployee = () => {
   const [formData, setFormData] = useState({
@@ -62,12 +63,15 @@ const AddEmployee = () => {
       if (profilePicture) {
         const { url } = await uploadProfilePicture(profilePicture, employee.id);
         if (url) {
-          // Update employee with profile picture URL
-          await fetch(`/api/employees/${employee.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ profile_picture: url })
-          });
+          // Update employee with profile picture URL using Supabase client
+          const { error: updateError } = await supabase
+            .from('employees')
+            .update({ profile_picture: url })
+            .eq('id', parseInt(employee.id));
+          
+          if (updateError) {
+            console.error('Error updating profile picture:', updateError);
+          }
         }
       }
 
@@ -215,11 +219,11 @@ const AddEmployee = () => {
                         mode="single"
                         selected={joiningDate}
                         onSelect={(date) => {
-                          // Fix timezone: set time to noon to avoid UTC date shifts
+                          // Fix timezone: create date in local timezone without time component
                           if (date) {
-                            const fixedDate = new Date(date);
-                            fixedDate.setHours(12, 0, 0, 0);
-                            setJoiningDate(fixedDate);
+                            // Create a new date object with local timezone at start of day
+                            const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                            setJoiningDate(localDate);
                           } else {
                             setJoiningDate(undefined);
                           }

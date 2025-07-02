@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,10 +69,10 @@ const EditEmployee = () => {
           // Fix timezone: parse date properly to avoid shifts
           if (data.joining_date) {
             const dateString = data.joining_date;
-            // Create date at noon to avoid timezone shifts
+            // Create date in local timezone without time component
             const [year, month, day] = dateString.split('-').map(Number);
-            const fixedDate = new Date(year, month - 1, day, 12, 0, 0, 0);
-            setJoiningDate(fixedDate);
+            const localDate = new Date(year, month - 1, day);
+            setJoiningDate(localDate);
           }
         }
       } catch (error) {
@@ -268,11 +269,11 @@ const EditEmployee = () => {
                         mode="single"
                         selected={joiningDate}
                         onSelect={(date) => {
-                          // Fix timezone: set time to noon to avoid UTC date shifts
+                          // Fix timezone: create date in local timezone without time component
                           if (date) {
-                            const fixedDate = new Date(date);
-                            fixedDate.setHours(12, 0, 0, 0);
-                            setJoiningDate(fixedDate);
+                            // Create a new date object with local timezone at start of day
+                            const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                            setJoiningDate(localDate);
                           } else {
                             setJoiningDate(undefined);
                           }

@@ -47,8 +47,10 @@ const AddEmployee = () => {
     try {
       const employeeData = {
         ...formData,
-        // Fix timezone issue: format date as YYYY-MM-DD in local timezone to avoid UTC shifts
-        joining_date: joiningDate ? format(joiningDate, "yyyy-MM-dd") : ""
+        // Fix timezone issue: format date as YYYY-MM-DD using UTC to avoid shifts
+        joining_date: joiningDate ? 
+          new Date(Date.UTC(joiningDate.getFullYear(), joiningDate.getMonth(), joiningDate.getDate()))
+            .toISOString().split('T')[0] : ""
       };
 
       // First add the employee
@@ -218,16 +220,7 @@ const AddEmployee = () => {
                       <Calendar
                         mode="single"
                         selected={joiningDate}
-                        onSelect={(date) => {
-                          // Fix timezone: create date in local timezone without time component
-                          if (date) {
-                            // Create a new date object with local timezone at start of day
-                            const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                            setJoiningDate(localDate);
-                          } else {
-                            setJoiningDate(undefined);
-                          }
-                        }}
+                        onSelect={setJoiningDate}
                         initialFocus
                         className="p-3 pointer-events-auto"
                       />

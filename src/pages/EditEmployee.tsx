@@ -69,7 +69,7 @@ const EditEmployee = () => {
           // Fix timezone: parse date properly to avoid shifts
           if (data.joining_date) {
             const dateString = data.joining_date;
-            // Create date in local timezone without time component
+            // Create date from the stored YYYY-MM-DD string
             const [year, month, day] = dateString.split('-').map(Number);
             const localDate = new Date(year, month - 1, day);
             setJoiningDate(localDate);
@@ -94,8 +94,10 @@ const EditEmployee = () => {
     try {
       let updateData = { 
         ...formData,
-        // Fix timezone: format date as YYYY-MM-DD in local timezone to avoid UTC shifts
-        joining_date: joiningDate ? format(joiningDate, 'yyyy-MM-dd') : null
+        // Fix timezone issue: format date as YYYY-MM-DD using UTC to avoid shifts
+        joining_date: joiningDate ? 
+          new Date(Date.UTC(joiningDate.getFullYear(), joiningDate.getMonth(), joiningDate.getDate()))
+            .toISOString().split('T')[0] : null
       };
 
       // If there's a new profile picture, upload it first
@@ -268,16 +270,7 @@ const EditEmployee = () => {
                       <Calendar
                         mode="single"
                         selected={joiningDate}
-                        onSelect={(date) => {
-                          // Fix timezone: create date in local timezone without time component
-                          if (date) {
-                            // Create a new date object with local timezone at start of day
-                            const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                            setJoiningDate(localDate);
-                          } else {
-                            setJoiningDate(undefined);
-                          }
-                        }}
+                        onSelect={setJoiningDate}
                         disabled={(date) => date > new Date()}
                         initialFocus
                         className="pointer-events-auto"
@@ -308,7 +301,7 @@ const EditEmployee = () => {
                       </>
                     )}
                   </Button>
-                </div>
+                  </div>
               </form>
             </CardContent>
           </Card>

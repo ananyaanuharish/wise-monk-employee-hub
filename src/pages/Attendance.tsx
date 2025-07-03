@@ -2,14 +2,20 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, MapPin, CheckCircle, XCircle } from 'lucide-react';
+import { Clock, MapPin, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
+import LocationMap from '@/components/LocationMap';
+import AttendanceLogModal from '@/components/AttendanceLogModal';
 import { useAttendance, AttendanceLog } from '@/hooks/useAttendance';
 import { format } from 'date-fns';
 
 const Attendance = () => {
+  const navigate = useNavigate();
   const [todayAttendance, setTodayAttendance] = useState<AttendanceLog | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [selectedLog, setSelectedLog] = useState<AttendanceLog | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { getTodayAttendance, clockIn, clockOut, getLocation, isLoading } = useAttendance();
 
   useEffect(() => {
@@ -78,6 +84,11 @@ const Attendance = () => {
     };
   };
 
+  const handleLogClick = (log: AttendanceLog) => {
+    setSelectedLog(log);
+    setIsModalOpen(true);
+  };
+
   const statusInfo = getStatusInfo();
   const StatusIcon = statusInfo.icon;
 
@@ -86,7 +97,7 @@ const Attendance = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <div className="animate-pulse">
               <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
               <div className="h-64 bg-gray-200 rounded"></div>
@@ -102,7 +113,19 @@ const Attendance = () => {
       <Navbar />
       
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-4xl mx-auto">
+          {/* Back to Dashboard Button */}
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/dashboard')}
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-0 h-auto font-normal"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              ← Back to Dashboard
+            </Button>
+          </div>
+
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Attendance
@@ -132,7 +155,7 @@ const Attendance = () => {
             
             <CardContent className="space-y-6">
               {todayAttendance ? (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
                       <div className="flex items-center space-x-2 text-green-700 dark:text-green-400 mb-2">
@@ -181,14 +204,41 @@ const Attendance = () => {
                     </div>
                   </div>
 
+                  {/* Interactive Maps */}
                   {todayAttendance.location && (
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                    <div className="space-y-4">
                       <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
-                        <MapPin className="w-4 h-4" />
-                        <span className="font-medium">Location</span>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {todayAttendance.location}
-                        </span>
+                        <MapPin className="w-5 h-5" />
+                        <span className="font-medium">Work Locations</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <LocationMap
+                          location={todayAttendance.location}
+                          title="Clock In Location"
+                          markerColor="green"
+                        />
+                        
+                        {todayAttendance.clock_out_time && (
+                          <LocationMap
+                            location={todayAttendance.location}
+                            title="Clock Out Location"
+                            markerColor="blue"
+                          />
+                        )}
+                      </div>
+                      
+                      {/* Clickable log entry */}
+                      <div 
+                        className="bg-white dark:bg-gray-800 p-4 rounded-lg border cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => handleLogClick(todayAttendance)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            View detailed attendance log
+                          </span>
+                          <ArrowLeft className="w-4 h-4 text-gray-400 rotate-180" />
+                        </div>
                       </div>
                     </div>
                   )}
@@ -248,6 +298,13 @@ const Attendance = () => {
           </Card>
         </div>
       </div>
+
+      {/* Attendance Log Modal */}
+      <AttendanceLogModal
+        log={selectedLog}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };

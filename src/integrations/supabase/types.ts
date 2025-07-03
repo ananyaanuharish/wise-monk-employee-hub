@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      attendance_logs: {
+        Row: {
+          clock_in_time: string
+          clock_out_time: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: number
+          location: string | null
+          user_id: string
+        }
+        Insert: {
+          clock_in_time: string
+          clock_out_time?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: number
+          location?: string | null
+          user_id: string
+        }
+        Update: {
+          clock_in_time?: string
+          clock_out_time?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: number
+          location?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       employees: {
         Row: {
           created_at: string

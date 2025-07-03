@@ -24,20 +24,25 @@ export const useAttendance = () => {
 
     const today = new Date().toISOString().split('T')[0];
     
-    const { data, error } = await supabase
-      .from('attendance_logs')
-      .select('*')
-      .eq('user_id', user.id)
-      .gte('clock_in_time', `${today}T00:00:00`)
-      .lt('clock_in_time', `${today}T23:59:59`)
-      .single();
+    try {
+      const { data, error } = await (supabase as any)
+        .from('attendance_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('clock_in_time', `${today}T00:00:00`)
+        .lt('clock_in_time', `${today}T23:59:59`)
+        .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        console.error('Error fetching today attendance:', error);
+        return null;
+      }
+
+      return data as AttendanceLog;
+    } catch (error) {
       console.error('Error fetching today attendance:', error);
       return null;
     }
-
-    return data;
   };
 
   const clockIn = async (location?: string) => {
@@ -57,7 +62,7 @@ export const useAttendance = () => {
         return { success: false };
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('attendance_logs')
         .insert({
           user_id: user.id,
@@ -78,7 +83,7 @@ export const useAttendance = () => {
 
       toast.success('Successfully clocked in!');
       setIsLoading(false);
-      return { success: true, data };
+      return { success: true, data: data as AttendanceLog };
     } catch (error) {
       console.error('Error clocking in:', error);
       toast.error('Failed to clock in');
@@ -111,7 +116,7 @@ export const useAttendance = () => {
         return { success: false };
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('attendance_logs')
         .update({
           clock_out_time: new Date().toISOString(),
@@ -129,7 +134,7 @@ export const useAttendance = () => {
 
       toast.success('Successfully clocked out!');
       setIsLoading(false);
-      return { success: true, data };
+      return { success: true, data: data as AttendanceLog };
     } catch (error) {
       console.error('Error clocking out:', error);
       toast.error('Failed to clock out');

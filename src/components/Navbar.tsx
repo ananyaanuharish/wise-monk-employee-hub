@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Building2, Plus, Moon, Sun } from "lucide-react";
+import { Building2, Plus, Moon, Sun, Clock } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,6 +37,15 @@ const Navbar = () => {
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
+          </Button>
+          
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/attendance')}
+            className="text-gray-700 dark:text-gray-300"
+          >
+            <Clock className="w-4 h-4 mr-2" />
+            Attendance
           </Button>
           
           <Button

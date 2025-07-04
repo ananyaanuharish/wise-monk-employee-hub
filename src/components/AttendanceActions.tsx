@@ -20,14 +20,8 @@ const AttendanceActions = ({ todayAttendance, isLoading, onClockIn, onClockOut }
           className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
           size="lg"
         >
-          {isLoading ? (
-            "Clocking In..."
-          ) : (
-            <>
-              <Clock className="w-5 h-5 mr-2" />
-              Clock In
-            </>
-          )}
+          <Clock className="w-5 h-5 mr-2" />
+          Clock In
         </Button>
       </div>
     );
@@ -42,14 +36,8 @@ const AttendanceActions = ({ todayAttendance, isLoading, onClockIn, onClockOut }
           className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
           size="lg"
         >
-          {isLoading ? (
-            "Clocking Out..."
-          ) : (
-            <>
-              <Clock className="w-5 h-5 mr-2" />
-              Clock Out
-            </>
-          )}
+          <Clock className="w-5 h-5 mr-2" />
+          Clock Out
         </Button>
       </div>
     );

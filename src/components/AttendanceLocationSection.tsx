@@ -1,6 +1,5 @@
 
-import { MapPin, ArrowRight } from 'lucide-react';
-import LocationMap from './LocationMap';
+import { MapPin } from 'lucide-react';
 import { AttendanceLog } from '@/hooks/useAttendance';
 
 interface AttendanceLocationSectionProps {
@@ -18,25 +17,10 @@ const AttendanceLocationSection = ({ todayAttendance, onLogClick }: AttendanceLo
         <span className="font-medium">Work Location</span>
       </div>
       
-      <div className="flex justify-center">
-        <LocationMap
-          location={todayAttendance.location}
-          markerColor="blue"
-          height={200}
-          width={300}
-        />
-      </div>
-      
-      <div 
-        className="bg-white dark:bg-gray-800 p-4 rounded-lg border cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-        onClick={() => onLogClick(todayAttendance)}
-      >
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            View detailed attendance log
-          </span>
-          <ArrowRight className="w-4 h-4 text-gray-400" />
-        </div>
+      <div className="text-center py-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Coordinates: {todayAttendance.location}
+        </p>
       </div>
     </div>
   );

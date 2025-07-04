@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,7 +29,7 @@ export const useAttendance = () => {
         .select('*')
         .eq('user_id', user.id)
         .gte('clock_in_time', `${today}T00:00:00`)
-        .lt('clock_in_time', `${today}T23:59:59`)
+        .lte('clock_in_time', `${today}T23:59:59`)
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"

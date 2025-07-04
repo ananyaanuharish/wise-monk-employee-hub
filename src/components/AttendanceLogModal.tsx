@@ -91,12 +91,13 @@ const AttendanceLogModal = ({ log, isOpen, onClose }: AttendanceLogModalProps) =
                 <span className="font-medium text-lg">Location Details</span>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex justify-center space-x-4">
                 <LocationMap
                   location={log.location}
                   title="Clock In Location"
                   markerColor="green"
-                  height={250}
+                  height={200}
+                  width={250}
                 />
                 
                 {log.clock_out_time && (
@@ -104,7 +105,8 @@ const AttendanceLogModal = ({ log, isOpen, onClose }: AttendanceLogModalProps) =
                     location={log.location}
                     title="Clock Out Location"
                     markerColor="blue"
-                    height={250}
+                    height={200}
+                    width={250}
                   />
                 )}
               </div>

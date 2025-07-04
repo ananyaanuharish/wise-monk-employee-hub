@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Clock, MapPin, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
+import LocationMap from '@/components/LocationMap';
+import AttendanceLogModal from '@/components/AttendanceLogModal';
 import { useAttendance, AttendanceLog } from '@/hooks/useAttendance';
 import { format } from 'date-fns';
 
@@ -12,6 +14,8 @@ const Attendance = () => {
   const navigate = useNavigate();
   const [todayAttendance, setTodayAttendance] = useState<AttendanceLog | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [selectedLog, setSelectedLog] = useState<AttendanceLog | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { getTodayAttendance, clockIn, clockOut, getLocation, isLoading } = useAttendance();
 
   useEffect(() => {
@@ -78,6 +82,11 @@ const Attendance = () => {
       icon: Clock,
       iconColor: 'text-blue-500'
     };
+  };
+
+  const handleLogClick = (log: AttendanceLog) => {
+    setSelectedLog(log);
+    setIsModalOpen(true);
   };
 
   const statusInfo = getStatusInfo();
@@ -195,7 +204,7 @@ const Attendance = () => {
                     </div>
                   </div>
 
-                  {/* Location Information */}
+                  {/* Interactive Map */}
                   {todayAttendance.location && (
                     <div className="space-y-4">
                       <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
@@ -203,12 +212,25 @@ const Attendance = () => {
                         <span className="font-medium">Work Location</span>
                       </div>
                       
-                      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Coordinates
-                        </div>
-                        <div className="font-mono text-sm">
-                          {todayAttendance.location}
+                      <div className="flex justify-center">
+                        <LocationMap
+                          location={todayAttendance.location}
+                          markerColor="blue"
+                          height={200}
+                          width={300}
+                        />
+                      </div>
+                      
+                      {/* Clickable log entry */}
+                      <div 
+                        className="bg-white dark:bg-gray-800 p-4 rounded-lg border cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => handleLogClick(todayAttendance)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            View detailed attendance log
+                          </span>
+                          <ArrowLeft className="w-4 h-4 text-gray-400 rotate-180" />
                         </div>
                       </div>
                     </div>
@@ -269,6 +291,13 @@ const Attendance = () => {
           </Card>
         </div>
       </div>
+
+      {/* Attendance Log Modal */}
+      <AttendanceLogModal
+        log={selectedLog}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };

@@ -101,9 +101,12 @@ const Attendance = () => {
     );
   }
 
-  // Filter out today's attendance from all logs for history display
+  // Filter logs for history display - only exclude today's attendance if it's not completed yet
   const historyLogs = allLogs.filter(log => {
     if (!todayAttendance) return true;
+    // If today's attendance is completed (has clock_out_time), include it in history
+    if (todayAttendance.clock_out_time) return true;
+    // If today's attendance is not completed, exclude it from history
     return log.id !== todayAttendance.id;
   });
 

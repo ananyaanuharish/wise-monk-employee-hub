@@ -22,8 +22,9 @@ const WorkHourLogModal = ({ log, isOpen, onClose }: WorkHourLogModalProps) => {
     const start = new Date(clockIn);
     const end = clockOut ? new Date(clockOut) : new Date();
     const diffMs = end.getTime() - start.getTime();
-    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const totalMinutes = Math.floor(diffMs / (1000 * 60)) - (log.total_paused_minutes || 0);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
     return `${hours}h ${minutes}m`;
   };
 
@@ -61,6 +62,7 @@ const WorkHourLogModal = ({ log, isOpen, onClose }: WorkHourLogModalProps) => {
                 </div>
                 <LocationMap
                   location={log.location}
+                  title="Clock In Location"
                   markerColor="green"
                   height={200}
                   width={300}
@@ -113,6 +115,7 @@ const WorkHourLogModal = ({ log, isOpen, onClose }: WorkHourLogModalProps) => {
                 </div>
                 <LocationMap
                   location={log.location}
+                  title="Clock Out Location"
                   markerColor="blue"
                   height={200}
                   width={300}

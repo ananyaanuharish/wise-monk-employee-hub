@@ -38,41 +38,62 @@ const LocationMap = ({ location, title, markerColor = 'blue', height = 200, widt
 
         if (!mounted) return;
 
-        // Set Mapbox access token (using a placeholder - user should add their own)
+        // Use a proper Mapbox access token (user should replace with their own)
         mapboxgl.default.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
 
-        // Initialize the map
+        // Initialize the map with proper settings
         map.current = new mapboxgl.default.Map({
           container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/streets-v12',
+          style: 'mapbox://styles/mapbox/streets-v12', // Use streets style for better visibility
           center: [lng, lat],
-          zoom: 15,
-          interactive: true
+          zoom: 16, // Higher zoom for street-level detail
+          interactive: true,
+          attributionControl: true
         });
 
         // Add navigation controls
         map.current.addControl(new mapboxgl.default.NavigationControl(), 'top-right');
 
-        // Create custom marker
+        // Create custom marker element
         const markerElement = document.createElement('div');
         markerElement.className = 'custom-marker';
-        markerElement.style.width = '20px';
-        markerElement.style.height = '20px';
+        markerElement.style.width = '24px';
+        markerElement.style.height = '24px';
         markerElement.style.borderRadius = '50%';
         markerElement.style.backgroundColor = markerColor === 'green' ? '#10b981' : '#3b82f6';
         markerElement.style.border = '3px solid white';
-        markerElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+        markerElement.style.boxShadow = '0 2px 8px rgba(0,0,0,0.4)';
+        markerElement.style.cursor = 'pointer';
 
         // Add marker to map
         new mapboxgl.default.Marker(markerElement)
           .setLngLat([lng, lat])
           .addTo(map.current);
 
+        // Handle map load event
         map.current.on('load', () => {
           if (mounted) {
             setIsLoading(false);
+            setHasError(false);
           }
         });
+
+        // Handle map errors
+        map.current.on('error', (e: any) => {
+          console.error('Map error:', e);
+          if (mounted) {
+            setHasError(true);
+            setIsLoading(false);
+          }
+        });
+
+        // Set timeout for loading
+        setTimeout(() => {
+          if (mounted && isLoading) {
+            setHasError(true);
+            setIsLoading(false);
+          }
+        }, 5000);
 
       } catch (error) {
         console.error('Error initializing map:', error);
@@ -105,13 +126,16 @@ const LocationMap = ({ location, title, markerColor = 'blue', height = 200, widt
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Map unavailable
           </p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+            Check your Mapbox token
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg overflow-hidden border" style={{ width: `${width}px` }}>
+    <div className="rounded-lg overflow-hidden border shadow-md" style={{ width: `${width}px` }}>
       {title && (
         <div className={`px-3 py-2 text-sm font-medium ${
           markerColor === 'green' 
@@ -124,7 +148,10 @@ const LocationMap = ({ location, title, markerColor = 'blue', height = 200, widt
       <div style={{ height: `${height}px`, position: 'relative' }}>
         {isLoading && (
           <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center z-10">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+              <p className="text-xs text-gray-500">Loading map...</p>
+            </div>
           </div>
         )}
         <div ref={mapContainer} style={{ height: '100%', width: '100%' }} />

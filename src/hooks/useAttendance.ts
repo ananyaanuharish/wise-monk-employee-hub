@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +13,9 @@ export interface AttendanceLog {
   clock_out_time?: string;
   location?: string;
   created_at: string;
+  status?: 'working' | 'paused' | 'completed';
+  pause_resume_log?: Array<{ type: 'pause' | 'resume'; timestamp: string }>;
+  total_paused_minutes?: number;
 }
 
 export const useAttendance = () => {
@@ -44,6 +48,28 @@ export const useAttendance = () => {
     }
   };
 
+  const getAllAttendanceLogs = async (): Promise<AttendanceLog[]> => {
+    if (!user) return [];
+
+    try {
+      const { data, error } = await (supabase as any)
+        .from('attendance_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('clock_in_time', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching attendance logs:', error);
+        return [];
+      }
+
+      return data as AttendanceLog[];
+    } catch (error) {
+      console.error('Error fetching attendance logs:', error);
+      return [];
+    }
+  };
+
   const clockIn = async (location?: string) => {
     if (!user) {
       toast.error('You must be logged in to clock in');
@@ -69,6 +95,9 @@ export const useAttendance = () => {
           email: user.email || '',
           clock_in_time: new Date().toISOString(),
           location: location,
+          status: 'working',
+          pause_resume_log: [],
+          total_paused_minutes: 0
         })
         .select()
         .single();
@@ -119,6 +148,7 @@ export const useAttendance = () => {
         .from('attendance_logs')
         .update({
           clock_out_time: new Date().toISOString(),
+          status: 'completed'
         })
         .eq('id', todayAttendance.id)
         .select()
@@ -137,6 +167,113 @@ export const useAttendance = () => {
     } catch (error) {
       console.error('Error clocking out:', error);
       toast.error('Failed to clock out');
+      setIsLoading(false);
+      return { success: false };
+    }
+  };
+
+  const pauseWork = async () => {
+    if (!user) {
+      toast.error('You must be logged in to pause work');
+      return { success: false };
+    }
+
+    setIsLoading(true);
+
+    try {
+      const todayAttendance = await getTodayAttendance();
+      
+      if (!todayAttendance || todayAttendance.status !== 'working') {
+        toast.error('Cannot pause work at this time');
+        setIsLoading(false);
+        return { success: false };
+      }
+
+      const pauseEvent = { type: 'pause' as const, timestamp: new Date().toISOString() };
+      const updatedLog = [...(todayAttendance.pause_resume_log || []), pauseEvent];
+
+      const { data, error } = await (supabase as any)
+        .from('attendance_logs')
+        .update({
+          status: 'paused',
+          pause_resume_log: updatedLog
+        })
+        .eq('id', todayAttendance.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error pausing work:', error);
+        toast.error('Failed to pause work');
+        setIsLoading(false);
+        return { success: false };
+      }
+
+      toast.success('Work paused');
+      setIsLoading(false);
+      return { success: true, data: data as AttendanceLog };
+    } catch (error) {
+      console.error('Error pausing work:', error);
+      toast.error('Failed to pause work');
+      setIsLoading(false);
+      return { success: false };
+    }
+  };
+
+  const resumeWork = async () => {
+    if (!user) {
+      toast.error('You must be logged in to resume work');
+      return { success: false };
+    }
+
+    setIsLoading(true);
+
+    try {
+      const todayAttendance = await getTodayAttendance();
+      
+      if (!todayAttendance || todayAttendance.status !== 'paused') {
+        toast.error('Cannot resume work at this time');
+        setIsLoading(false);
+        return { success: false };
+      }
+
+      const resumeEvent = { type: 'resume' as const, timestamp: new Date().toISOString() };
+      const updatedLog = [...(todayAttendance.pause_resume_log || []), resumeEvent];
+
+      // Calculate total paused time
+      let totalPausedMinutes = 0;
+      for (let i = 0; i < updatedLog.length; i += 2) {
+        if (updatedLog[i]?.type === 'pause' && updatedLog[i + 1]?.type === 'resume') {
+          const pauseTime = new Date(updatedLog[i].timestamp);
+          const resumeTime = new Date(updatedLog[i + 1].timestamp);
+          totalPausedMinutes += Math.floor((resumeTime.getTime() - pauseTime.getTime()) / (1000 * 60));
+        }
+      }
+
+      const { data, error } = await (supabase as any)
+        .from('attendance_logs')
+        .update({
+          status: 'working',
+          pause_resume_log: updatedLog,
+          total_paused_minutes: totalPausedMinutes
+        })
+        .eq('id', todayAttendance.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error resuming work:', error);
+        toast.error('Failed to resume work');
+        setIsLoading(false);
+        return { success: false };
+      }
+
+      toast.success('Work resumed');
+      setIsLoading(false);
+      return { success: true, data: data as AttendanceLog };
+    } catch (error) {
+      console.error('Error resuming work:', error);
+      toast.error('Failed to resume work');
       setIsLoading(false);
       return { success: false };
     }
@@ -165,8 +302,11 @@ export const useAttendance = () => {
 
   return {
     getTodayAttendance,
+    getAllAttendanceLogs,
     clockIn,
     clockOut,
+    pauseWork,
+    resumeWork,
     getLocation,
     isLoading,
   };

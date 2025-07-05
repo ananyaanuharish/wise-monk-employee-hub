@@ -1,24 +1,24 @@
 
 import { Clock } from 'lucide-react';
-import { format, differenceInMinutes } from 'date-fns';
+import { format } from 'date-fns';
 import { AttendanceLog } from '@/hooks/useAttendance';
 
 interface AttendanceTimeDisplayProps {
   todayAttendance: AttendanceLog;
-  onLogClick: (log: AttendanceLog) => void;
 }
 
-const AttendanceTimeDisplay = ({ todayAttendance, onLogClick }: AttendanceTimeDisplayProps) => {
+const AttendanceTimeDisplay = ({ todayAttendance }: AttendanceTimeDisplayProps) => {
   const formatTime = (timeString: string) => {
     return format(new Date(timeString), 'h:mm a');
   };
 
-  const calculateDuration = (clockIn: string, clockOut?: string) => {
+  const calculateDuration = (clockIn: string, clockOut?: string, pausedMinutes = 0) => {
     const start = new Date(clockIn);
     const end = clockOut ? new Date(clockOut) : new Date();
     const diffMs = end.getTime() - start.getTime();
-    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const totalMinutes = Math.floor(diffMs / (1000 * 60)) - pausedMinutes;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
     return `${hours}h ${minutes}m`;
   };
 
@@ -56,16 +56,13 @@ const AttendanceTimeDisplay = ({ todayAttendance, onLogClick }: AttendanceTimeDi
         </p>
       </div>
 
-      <div 
-        className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        onClick={() => onLogClick(todayAttendance)}
-      >
+      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
         <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 mb-2">
           <Clock className="w-4 h-4" />
           <span className="font-medium">Duration</span>
         </div>
         <p className="text-2xl font-bold text-gray-900 dark:text-white">
-          {calculateDuration(todayAttendance.clock_in_time, todayAttendance.clock_out_time)}
+          {calculateDuration(todayAttendance.clock_in_time, todayAttendance.clock_out_time, todayAttendance.total_paused_minutes || 0)}
         </p>
       </div>
     </div>

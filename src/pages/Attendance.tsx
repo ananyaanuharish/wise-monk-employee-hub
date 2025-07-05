@@ -9,30 +9,44 @@ import AttendanceStatus from '@/components/AttendanceStatus';
 import AttendanceTimeDisplay from '@/components/AttendanceTimeDisplay';
 import AttendanceLocationSection from '@/components/AttendanceLocationSection';
 import AttendanceActions from '@/components/AttendanceActions';
+import WorkHourLogsTable from '@/components/WorkHourLogsTable';
 import ClockInModal from '@/components/ClockInModal';
 import ClockOutModal from '@/components/ClockOutModal';
-import WorkHourLogModal from '@/components/WorkHourLogModal';
+import AttendanceLogModal from '@/components/AttendanceLogModal';
 import { useAttendance, AttendanceLog } from '@/hooks/useAttendance';
 import { Button } from '@/components/ui/button';
 
 const Attendance = () => {
   const navigate = useNavigate();
   const [todayAttendance, setTodayAttendance] = useState<AttendanceLog | null>(null);
+  const [allLogs, setAllLogs] = useState<AttendanceLog[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [selectedLog, setSelectedLog] = useState<AttendanceLog | null>(null);
-  const [isWorkHourModalOpen, setIsWorkHourModalOpen] = useState(false);
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isClockInModalOpen, setIsClockInModalOpen] = useState(false);
   const [isClockOutModalOpen, setIsClockOutModalOpen] = useState(false);
-  const { getTodayAttendance, clockIn, clockOut, isLoading } = useAttendance();
+  const { 
+    getTodayAttendance, 
+    getAllAttendanceLogs, 
+    clockIn, 
+    clockOut, 
+    pauseWork, 
+    resumeWork, 
+    isLoading 
+  } = useAttendance();
 
   useEffect(() => {
-    loadTodayAttendance();
+    loadAttendanceData();
   }, []);
 
-  const loadTodayAttendance = async () => {
+  const loadAttendanceData = async () => {
     setIsLoadingData(true);
-    const attendance = await getTodayAttendance();
-    setTodayAttendance(attendance);
+    const [todayData, allLogsData] = await Promise.all([
+      getTodayAttendance(),
+      getAllAttendanceLogs()
+    ]);
+    setTodayAttendance(todayData);
+    setAllLogs(allLogsData);
     setIsLoadingData(false);
   };
 
@@ -40,7 +54,7 @@ const Attendance = () => {
     const result = await clockIn(location);
     if (result.success) {
       setIsClockInModalOpen(false);
-      await loadTodayAttendance();
+      await loadAttendanceData();
     }
   };
 
@@ -48,13 +62,27 @@ const Attendance = () => {
     const result = await clockOut();
     if (result.success) {
       setIsClockOutModalOpen(false);
-      await loadTodayAttendance();
+      await loadAttendanceData();
+    }
+  };
+
+  const handlePause = async () => {
+    const result = await pauseWork();
+    if (result.success) {
+      await loadAttendanceData();
+    }
+  };
+
+  const handleResume = async () => {
+    const result = await resumeWork();
+    if (result.success) {
+      await loadAttendanceData();
     }
   };
 
   const handleLogClick = (log: AttendanceLog) => {
     setSelectedLog(log);
-    setIsWorkHourModalOpen(true);
+    setIsLogModalOpen(true);
   };
 
   if (isLoadingData) {
@@ -72,6 +100,12 @@ const Attendance = () => {
       </div>
     );
   }
+
+  // Filter out today's attendance from all logs for history display
+  const historyLogs = allLogs.filter(log => {
+    if (!todayAttendance) return true;
+    return log.id !== todayAttendance.id;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -99,7 +133,7 @@ const Attendance = () => {
             </p>
           </div>
 
-          <Card className="border-0 shadow-lg">
+          <Card className="border-0 shadow-lg mb-8">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -115,10 +149,7 @@ const Attendance = () => {
             <CardContent className="space-y-6">
               {todayAttendance ? (
                 <div className="space-y-6">
-                  <AttendanceTimeDisplay 
-                    todayAttendance={todayAttendance} 
-                    onLogClick={handleLogClick}
-                  />
+                  <AttendanceTimeDisplay todayAttendance={todayAttendance} />
                   <AttendanceLocationSection 
                     todayAttendance={todayAttendance} 
                     onLogClick={handleLogClick} 
@@ -137,6 +168,24 @@ const Attendance = () => {
                 isLoading={isLoading}
                 onClockIn={() => setIsClockInModalOpen(true)}
                 onClockOut={() => setIsClockOutModalOpen(true)}
+                onPause={handlePause}
+                onResume={handleResume}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Work Hour Logs Section */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-xl">📅 Work Hour Logs</CardTitle>
+              <CardDescription>
+                View your complete attendance history
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <WorkHourLogsTable 
+                logs={historyLogs} 
+                onLogClick={handleLogClick} 
               />
             </CardContent>
           </Card>
@@ -160,10 +209,10 @@ const Attendance = () => {
         />
       )}
 
-      <WorkHourLogModal
+      <AttendanceLogModal
         log={selectedLog}
-        isOpen={isWorkHourModalOpen}
-        onClose={() => setIsWorkHourModalOpen(false)}
+        isOpen={isLogModalOpen}
+        onClose={() => setIsLogModalOpen(false)}
       />
     </div>
   );

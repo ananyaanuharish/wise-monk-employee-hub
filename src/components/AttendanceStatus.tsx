@@ -1,5 +1,5 @@
 
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Pause } from 'lucide-react';
 import { AttendanceLog } from '@/hooks/useAttendance';
 
 interface AttendanceStatusProps {
@@ -26,8 +26,17 @@ const AttendanceStatus = ({ todayAttendance }: AttendanceStatusProps) => {
       };
     }
 
+    if (todayAttendance.status === 'paused') {
+      return {
+        status: 'Paused',
+        statusColor: 'text-yellow-600',
+        icon: Pause,
+        iconColor: 'text-yellow-500'
+      };
+    }
+
     return {
-      status: 'Currently Working',
+      status: 'Working',
       statusColor: 'text-blue-600',
       icon: Clock,
       iconColor: 'text-blue-500'

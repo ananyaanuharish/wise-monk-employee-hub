@@ -32,42 +32,48 @@ const LocationMap = ({ location, title, markerColor = 'blue', height = 200, widt
           throw new Error('Invalid coordinates');
         }
 
-        // Dynamically import Leaflet to prevent initial loading issues
-        const [L, { MapContainer, TileLayer, Marker }] = await Promise.all([
-          import('leaflet'),
-          import('react-leaflet')
-        ]);
-
-        // Fix for default markers - ensure this runs after Leaflet is loaded
-        delete (L.Icon.Default.prototype as any)._getIconUrl;
-        L.Icon.Default.mergeOptions({
-          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-        });
+        // Dynamically import Mapbox GL
+        const mapboxgl = await import('mapbox-gl');
+        await import('mapbox-gl/dist/mapbox-gl.css');
 
         if (!mounted) return;
 
-        // Create custom icon
-        const customIcon = L.divIcon({
-          className: 'custom-marker',
-          html: `<div style="background-color: ${markerColor === 'green' ? '#10b981' : '#3b82f6'}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-          iconSize: [12, 12],
-          iconAnchor: [6, 6],
-        });
+        // Set Mapbox access token (using a placeholder - user should add their own)
+        mapboxgl.default.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
 
         // Initialize the map
-        map.current = L.map(mapContainer.current).setView([lat, lng], 13);
+        map.current = new mapboxgl.default.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/streets-v12',
+          center: [lng, lat],
+          zoom: 15,
+          interactive: true
+        });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map.current);
+        // Add navigation controls
+        map.current.addControl(new mapboxgl.default.NavigationControl(), 'top-right');
 
-        L.marker([lat, lng], { icon: customIcon }).addTo(map.current);
+        // Create custom marker
+        const markerElement = document.createElement('div');
+        markerElement.className = 'custom-marker';
+        markerElement.style.width = '20px';
+        markerElement.style.height = '20px';
+        markerElement.style.borderRadius = '50%';
+        markerElement.style.backgroundColor = markerColor === 'green' ? '#10b981' : '#3b82f6';
+        markerElement.style.border = '3px solid white';
+        markerElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
 
-        if (mounted) {
-          setIsLoading(false);
-        }
+        // Add marker to map
+        new mapboxgl.default.Marker(markerElement)
+          .setLngLat([lng, lat])
+          .addTo(map.current);
+
+        map.current.on('load', () => {
+          if (mounted) {
+            setIsLoading(false);
+          }
+        });
+
       } catch (error) {
         console.error('Error initializing map:', error);
         if (mounted) {
@@ -97,7 +103,7 @@ const LocationMap = ({ location, title, markerColor = 'blue', height = 200, widt
         <div className="text-center">
           <MapPin className="w-6 h-6 text-gray-400 mx-auto mb-2" />
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {location || 'Location not available'}
+            Map unavailable
           </p>
         </div>
       </div>
@@ -117,7 +123,7 @@ const LocationMap = ({ location, title, markerColor = 'blue', height = 200, widt
       )}
       <div style={{ height: `${height}px`, position: 'relative' }}>
         {isLoading && (
-          <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center z-10">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
           </div>
         )}

@@ -18,6 +18,9 @@ export type Database = {
           full_name: string
           id: number
           location: string | null
+          pause_resume_log: Json | null
+          status: string | null
+          total_paused_minutes: number | null
           user_id: string
         }
         Insert: {
@@ -28,6 +31,9 @@ export type Database = {
           full_name: string
           id?: number
           location?: string | null
+          pause_resume_log?: Json | null
+          status?: string | null
+          total_paused_minutes?: number | null
           user_id: string
         }
         Update: {
@@ -38,6 +44,9 @@ export type Database = {
           full_name?: string
           id?: number
           location?: string | null
+          pause_resume_log?: Json | null
+          status?: string | null
+          total_paused_minutes?: number | null
           user_id?: string
         }
         Relationships: []

@@ -23,80 +23,43 @@ const LocationMap = ({ location, title, markerColor = 'blue', height = 200, widt
       if (!mapContainer.current || !location) return;
 
       try {
-        // Parse coordinates
         const [latStr, lngStr] = location.split(', ').map(coord => coord.trim());
         const lat = parseFloat(latStr);
         const lng = parseFloat(lngStr);
 
-        if (isNaN(lat) || isNaN(lng)) {
-          throw new Error('Invalid coordinates');
-        }
+        if (isNaN(lat) || isNaN(lng)) throw new Error('Invalid coordinates');
 
-        // Dynamically import Mapbox GL
-        const mapboxgl = await import('mapbox-gl');
-        await import('mapbox-gl/dist/mapbox-gl.css');
+        // Use Leaflet instead of Mapbox (no API key needed)
+        const L = await import('leaflet');
+        await import('leaflet/dist/leaflet.css');
 
         if (!mounted) return;
 
-        // Use a proper Mapbox access token (user should replace with their own)
-        mapboxgl.default.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+        // Initialize Leaflet map with OpenStreetMap tiles (free)
+        map.current = L.default.map(mapContainer.current).setView([lat, lng], 16);
 
-        // Initialize the map with proper settings
-        map.current = new mapboxgl.default.Map({
-          container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/streets-v12', // Use streets style for better visibility
-          center: [lng, lat],
-          zoom: 16, // Higher zoom for street-level detail
-          interactive: true,
-          attributionControl: true
+        // Add OpenStreetMap tiles (completely free, no token needed)
+        L.default.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(map.current);
+
+        // Create custom marker
+        const markerIcon = L.default.divIcon({
+          html: `<div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${markerColor === 'green' ? '#10b981' : '#3b82f6'}; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4);"></div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
         });
 
-        // Add navigation controls
-        map.current.addControl(new mapboxgl.default.NavigationControl(), 'top-right');
+        L.default.marker([lat, lng], { icon: markerIcon }).addTo(map.current);
 
-        // Create custom marker element
-        const markerElement = document.createElement('div');
-        markerElement.className = 'custom-marker';
-        markerElement.style.width = '24px';
-        markerElement.style.height = '24px';
-        markerElement.style.borderRadius = '50%';
-        markerElement.style.backgroundColor = markerColor === 'green' ? '#10b981' : '#3b82f6';
-        markerElement.style.border = '3px solid white';
-        markerElement.style.boxShadow = '0 2px 8px rgba(0,0,0,0.4)';
-        markerElement.style.cursor = 'pointer';
-
-        // Add marker to map
-        new mapboxgl.default.Marker(markerElement)
-          .setLngLat([lng, lat])
-          .addTo(map.current);
-
-        // Handle map load event
-        map.current.on('load', () => {
-          if (mounted) {
-            setIsLoading(false);
-            setHasError(false);
-          }
-        });
-
-        // Handle map errors
-        map.current.on('error', (e: any) => {
-          console.error('Map error:', e);
-          if (mounted) {
-            setHasError(true);
-            setIsLoading(false);
-          }
-        });
-
-        // Set timeout for loading
-        setTimeout(() => {
-          if (mounted && isLoading) {
-            setHasError(true);
-            setIsLoading(false);
-          }
-        }, 5000);
+        if (mounted) {
+          setIsLoading(false);
+          setHasError(false);
+        }
 
       } catch (error) {
-        console.error('Error initializing map:', error);
+        console.error('Map error:', error);
         if (mounted) {
           setHasError(true);
           setIsLoading(false);
@@ -114,7 +77,6 @@ const LocationMap = ({ location, title, markerColor = 'blue', height = 200, widt
     };
   }, [location, markerColor]);
 
-  // Fallback for invalid coordinates or errors
   if (hasError || !location) {
     return (
       <div 
@@ -124,10 +86,7 @@ const LocationMap = ({ location, title, markerColor = 'blue', height = 200, widt
         <div className="text-center">
           <MapPin className="w-6 h-6 text-gray-400 mx-auto mb-2" />
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Map unavailable
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-            Check your Mapbox token
+            Location: {location}
           </p>
         </div>
       </div>

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +15,10 @@ export interface AttendanceLog {
   status?: 'working' | 'paused' | 'completed';
   pause_resume_log?: Array<{ type: 'pause' | 'resume'; timestamp: string }>;
   total_paused_minutes?: number;
+  auto_clockout?: boolean;
+  reminder_sent_at?: string;
+  clockout_token?: string;
+  token_expires_at?: string;
 }
 
 export const useAttendance = () => {
@@ -97,7 +100,8 @@ export const useAttendance = () => {
           location: location,
           status: 'working',
           pause_resume_log: [],
-          total_paused_minutes: 0
+          total_paused_minutes: 0,
+          auto_clockout: false
         })
         .select()
         .single();
@@ -148,7 +152,8 @@ export const useAttendance = () => {
         .from('attendance_logs')
         .update({
           clock_out_time: new Date().toISOString(),
-          status: 'completed'
+          status: 'completed',
+          auto_clockout: false
         })
         .eq('id', todayAttendance.id)
         .select()
